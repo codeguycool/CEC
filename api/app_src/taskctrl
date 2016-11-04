@@ -1,0 +1,57 @@
+#!/bin/bash
+
+function usage()
+{
+    echo "Usage: taskctrl app_name [create|delete] name"
+    exit 0
+}
+
+function create()
+{
+    echo "creating... ${2}"
+
+    PRE_PATH="apps/${1}"
+    TARGET_DIR="${PRE_PATH}/background/${2}"
+    INSERT_LINE=$((`grep -n "]" ${PRE_PATH}/background/__init__.py | awk -F: '{print $1}'`-1))
+
+    if [ ! -d ${TARGET_DIR} ]; then
+        mkdir ${TARGET_DIR}
+        touch ${TARGET_DIR}/__init__.py
+        cp template/task.py ${TARGET_DIR}/task.py
+
+        sed -i "${INSERT_LINE}a \ \ \ \ '${2}'," ${PRE_PATH}/background/__init__.py
+    fi
+}
+
+function delete()
+{
+    echo "deleting... ${2}"
+
+    PRE_PATH="apps/${1}"
+    TARGET_DIR="${PRE_PATH}/background/${2}"
+
+    if [ -d ${TARGET_DIR} ]; then
+        rm -rf ${TARGET_DIR}
+
+        DELETE_LINE=`grep -n "${2}" ${PRE_PATH}/background/__init__.py | awk -F: '{print $1}'`
+        sed -i "${DELETE_LINE}d" ${PRE_PATH}/background/__init__.py
+    fi
+}
+
+if [ ${#} != 3 ]; then
+    usage
+fi
+
+case ${2} in
+    "create")
+        create ${1} ${3}
+        ;;
+    "delete")
+        delete ${1} ${3}
+        ;;
+    *)
+        usage
+        ;;
+esac
+
+exit 0

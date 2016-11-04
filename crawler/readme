@@ -1,0 +1,114 @@
+Entertainment Data Provider(EDP)
+================================
+
+EDP
+-----------
+
+EDP是一個搜集網路上的的各式娛樂資源，例如: 電影、電視劇、KTV...等等，提供給使用者使用的專案。
+
+
+設計理念
+-------
+
+實作上是利用scrapy設計網路爬蟲收集各大網站的資料，但由於imdb的資料筆數太多，若使用爬蟲爬取資料會造成imdb封鎖我們的爬蟲，
+
+所以改利用imdb plain text data files，做為imdb資料的來源。
+
+不過imdb plain text data files裡並沒有包含電影海報的資訊，所以還需要利用TMDB API取得電影海報。
+
+
+EDP的目錄
+-----------
+
+MyCrontab/              一些需要定期執行的功能
+ - ...                  (於下方詳述)
+MyScrapy/               也就是scrapy, 主要功能為各大資料網站的爬蟲
+ - ...                  (於下方詳述)
+lib/                    共用的lib
+ - log.py               MyScrapy的log (disable)
+ - proxyscaper.py       用來抓proxy (disable)
+ - utils.py             一些工具函式
+log/                    記錄檔目錄
+sql/                    Database schema
+test/                   unittest（尚未完成）
+tmp/                    暫存檔目錄
+conf/                   設定檔目錄
+ - settings.py          設定檔
+createdb.py             建立資料庫的工具
+reamde                  說明檔
+runspider.py            MyScrapy的程式進入點
+runtest.py              執行unittest
+setjob.py               crontab設定
+updateimdb.py           更新imdb的程式
+
+
+MyCrontab
+ - updateimdb/              更新imdb資料
+   - bin/
+      - imdbpy2sql.py       改寫imdbpy的imdbpy2sql以實現remote server copy from功能
+   - db_backup.py           資料庫備份
+   - db_operator            相關的資料庫操作
+   - db_parameter.py        將db parameter改以class實作 (尚未實作)
+   - downloader.py          download imdb file
+   - imdb_manager.py        imdb資料庫的管理（更新imdbid、備份...等）
+   - imdbpy.py              將imdbpy改成我們需要的資料欄位及實現封面取得
+   - lmdb_manager.py        lmdb資料庫的管理（匯入imdb資料...等）
+
+
+MyScrapy
+ - MyScrapy/                 scrapy的主目錄
+    - extensions
+       - logger.py          scrapy只有一份log檔，因此用來實現每個spider都存一份log
+    - items/                用來儲存處理完後的資料
+    - lib/                  MyScrapy的共用lib
+       - flvextractor.py    取得酷播flv的實現
+       - jsexectute.py      酷播flv藏在javascript裡，實現 execute javascript
+       - searchdouban.py    用酷播的資訊搜尋相對應的豆瓣資訊
+       - ydextactor.py      抓取酷播的Youtube、Dailymotion資訊
+    - middlewares/
+       - httpproxy.py       proxy (disable)
+       - useragent.py       動態變更useragent
+    - parsers/              用來爬取出item
+    - pielines/             用來處理item，如儲存進DB
+    - spiders/
+    - settings.py           scrapy的設定檔
+
+ - scrapy.cfg           scrapy的設定檔，不可刪除、不可更改位置
+
+
+系統需求
+-------
+
+1. python
+2. postgresql
+3. tor
+4. polipo
+5. psycopg2 (2.6.1)         License: LGPL with exceptions or ZPL
+6. IMDbPY (5.0)             License: GPL
+7. lxml (3.4.4)             License :: OSI Approved :: BSD License
+8. requests (2.7.0)         License: Apache 2.0
+9. SQLObject (2.1.2)
+10. python-dateutil (1.5)   License: Simplified BSD
+11. pycurl (7.19.5.1)       License: LGPL/MIT
+12. youtube-dl (2016.2.1)   License :: Public Domain
+13. scrapy (1.1.0)          License: BSD
+14. js2py (0.35)            License: MIT
+15. mock (1.3.0)            License :: OSI Approved :: BSD License
+16. python-crontab (1.9.3)  License: LGPLv3
+
+
+如何使用
+-------
+
+1. 至 /conf/settings.py 修改相關設定
+2. 利用 createdb.py 建立資料庫
+3. 設定 polipo 與 tor 橋接，並且設定 polipo 的 port 為 8123
+4. 執行 setjob.py 設定 crontab task
+
+
+Reference
+---------
+
+http://doc.scrapy.org/en/latest/
+http://www.imdb.com/interfaces
+https://www.themoviedb.org/documentation/api

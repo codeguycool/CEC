@@ -1,0 +1,2558 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Cloud API Document",
+        "description": "",
+        "version": "1.0.0"
+    },
+    "schemes": [
+        "http"
+    ],
+    "basePath": "/",
+    "produces": [
+        "application/json"
+    ],
+    "paths": {
+        "/movies": {
+            "get": {
+                "summary": "取得(最新、熱門)的電影資料",
+                "description": "取得電影資料",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "輸入latest回傳最新資料, 輸入popular熱門排行",
+                        "required": false,
+                        "type": "string",
+                        "format": "string",
+                        "enum": [
+                            "latest",
+                            "popular"
+                        ]
+                    },
+                    {
+                        "name": "since",
+                        "in": "query",
+                        "description": "要求從第幾筆開始抓",
+                        "required": false,
+                        "type": "number",
+                        "default": 0
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "一次抓多少筆",
+                        "required": false,
+                        "type": "number",
+                        "default": 20
+                    },
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "description": "簡體回傳豆瓣，繁體回傳開眼，英文回傳IMDB",
+                        "required": true,
+                        "type": "string",
+                        "enum": [
+                            "SCH",
+                            "ENG",
+                            "TCH"
+                        ]
+                    }
+                ],
+                "tags": [
+                    "movies"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "正常回復情形: A json data of movies",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "movies": {
+                                    "type": "array",
+                                    "description": "a list of movies.",
+                                    "items": {
+                                        "$ref": "#/definitions/movie"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/movies/{movieid}": {
+            "get": {
+                "summary": "取得指定movieid的電影細節",
+                "description": "ID of movie to use (包含分類、導演、演員等所有細節)",
+                "parameters": [
+                    {
+                        "name": "movieid",
+                        "in": "path",
+                        "description": "提供要查詢的movie id",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "tags": [
+                    "movies"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "正常回復情形: A json data of movies",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "movies": {
+                                    "type": "array",
+                                    "description": "a list of movies.(取第0筆資料)",
+                                    "items": {
+                                        "$ref": "#/definitions/movie_detail"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/movies/count/{movieid}": {
+            "post": {
+                "summary": "增加電影的查看/下載/撥放次數",
+                "description": "增加使用者對指定電影的查看/下載/撥放次數",
+                "parameters": [
+                    {
+                        "name": "movieid",
+                        "in": "path",
+                        "description": "要增加次數的movie id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "行為類別",
+                        "required": true,
+                        "type": "string",
+                        "enum": [
+                            "play",
+                            "view",
+                            "download"
+                        ]
+                    }
+                ],
+                "tags": [
+                    "movies"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "正常回復情形: 統計數資料",
+                        "schema": {
+                            "$ref": "#/definitions/add_count"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/movies/titles/{imdbid}": {
+            "get": {
+                "summary": "取得各語系的電影名稱",
+                "description": "取得各語系的電影名稱",
+                "parameters": [
+                    {
+                        "name": "imdbid",
+                        "in": "path",
+                        "description": "IMDB ID",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "tags": [
+                    "movies"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "正常回復情形: 電影名稱",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "titles": {
+                                    "type": "array",
+                                    "description": "各語系電影名稱",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "語系": {
+                                                "type": "string",
+                                                "description": "電影名稱"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/movies/metadata": {
+            "get": {
+                "summary": "取得各個來源電影資料",
+                "description": "用movie ID來取得各個來源電影資料",
+                "parameters": [
+                    {
+                        "name": "ids",
+                        "in": "query",
+                        "description": "list of movie ID",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "tags": [
+                    "movies"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "正常回復情形: A json data of movies",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "movies": {
+                                    "type": "object",
+                                    "description": "Index by query movies IDs",
+                                    "properties": {
+                                        "Movie_ID": {
+                                            "type": "object",
+                                            "description": "Cloud data of each movies",
+                                            "properties": {
+                                                "imdbid": {
+                                                    "type": "string",
+                                                    "default": "null",
+                                                    "description": "IMDB ID"
+                                                },
+                                                "metadata": {
+                                                    "type": "object",
+                                                    "description": "Index by metadata source name",
+                                                    "properties": {
+                                                        "資料來源": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "string",
+                                                                    "description": "Movie ID"
+                                                                },
+                                                                "source": {
+                                                                    "type": "string",
+                                                                    "description": "電影資料來源"
+                                                                },
+                                                                "title": {
+                                                                    "type": "string",
+                                                                    "description": "電影名稱"
+                                                                },
+                                                                "akas": {
+                                                                    "type": "array",
+                                                                    "description": "別名",
+                                                                    "items": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "genres": {
+                                                                    "type": "array",
+                                                                    "description": "類別",
+                                                                    "items": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "rating": {
+                                                                    "type": "string",
+                                                                    "description": "評分"
+                                                                },
+                                                                "posterurl": {
+                                                                    "type": "string",
+                                                                    "description": "電影海報(大)"
+                                                                },
+                                                                "directors": {
+                                                                    "type": "array",
+                                                                    "description": "導演",
+                                                                    "items": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "stars": {
+                                                                    "type": "array",
+                                                                    "description": "演員",
+                                                                    "items": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "releasedate": {
+                                                                    "type": "object",
+                                                                    "description": "上映日期"
+                                                                },
+                                                                "countries": {
+                                                                    "type": "array",
+                                                                    "description": "上映地區",
+                                                                    "items": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "description": {
+                                                                    "type": "string",
+                                                                    "description": "描述"
+                                                                },
+                                                                "url": {
+                                                                    "type": "string",
+                                                                    "description": "資料來源網址"
+                                                                },
+                                                                "md5sum": {
+                                                                    "type": "string",
+                                                                    "description": "資料checksum"
+                                                                },
+                                                                "thumbnailurl": {
+                                                                    "type": "string",
+                                                                    "description": "電影海報(小)"
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/search/index": {
+            "get": {
+                "summary": "關鍵字搜尋的統計結果",
+                "description": "關鍵字搜尋的統計結果",
+                "parameters": [
+                    {
+                        "name": "keyword",
+                        "in": "query",
+                        "description": "欲查詢的關鍵字",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "description": "電影：簡體回傳豆瓣，繁體回傳開眼，英文回傳IMDB。",
+                        "required": true,
+                        "type": "string",
+                        "enum": [
+                            "SCH",
+                            "ENG",
+                            "TCH"
+                        ]
+                    },
+                    {
+                        "name": "range",
+                        "in": "query",
+                        "description": "欲搜尋的範圍。預設為搜尋全部類別。",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "tags": [
+                    "search"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "正常回復情形: 統計結果資料",
+                        "schema": {
+                            "$ref": "#/definitions/search_index"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/search/{multimedia_type}": {
+            "get": {
+                "summary": "關鍵字搜尋",
+                "description": "使用關鍵字搜尋多媒體資料",
+                "parameters": [
+                    {
+                        "name": "multimedia_type",
+                        "in": "path",
+                        "description": "欲查詢的多媒體種類",
+                        "required": true,
+                        "type": "string",
+                        "enum": [
+                            "movies",
+                            "karaokes",
+                            "avs"
+                        ]
+                    },
+                    {
+                        "name": "keyword",
+                        "in": "query",
+                        "description": "欲查詢的關鍵字",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "file_filter",
+                        "in": "query",
+                        "description": "檔案過濾方式",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "keyword_filter",
+                        "in": "query",
+                        "description": "關鍵字過濾",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ordering",
+                        "in": "query",
+                        "description": "搜尋結果排序方式. 0：時間降序; 1：時間昇序; 2：熱門降序; 3：熱門昇序.",
+                        "required": false,
+                        "type": "number",
+                        "default": 0,
+                        "enum": [
+                            0,
+                            1,
+                            2,
+                            3
+                        ]
+                    },
+                    {
+                        "name": "since",
+                        "in": "query",
+                        "description": "要求從第幾筆開始抓",
+                        "required": false,
+                        "type": "number",
+                        "default": 0
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "一次抓多少筆",
+                        "required": false,
+                        "type": "number",
+                        "default": 10
+                    },
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "description": "電影：簡體回傳豆瓣，繁體回傳開眼，英文回傳IMDB。",
+                        "required": true,
+                        "type": "string",
+                        "enum": [
+                            "SCH",
+                            "ENG",
+                            "TCH"
+                        ]
+                    }
+                ],
+                "tags": [
+                    "search"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "正常回復情形: A json data of results",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "results": {
+                                    "type": "array",
+                                    "description": "a list of results.",
+                                    "items": {
+                                        "$ref": "#/definitions/movie_detail"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/search/keywords": {
+            "get": {
+                "summary": "推薦關鍵字",
+                "description": "依據語系來推薦關鍵字",
+                "parameters": [
+                    {
+                        "name": "media_id",
+                        "in": "query",
+                        "description": "要查詢的 ID",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "media_type",
+                        "in": "query",
+                        "description": "要查詢的種類",
+                        "required": true,
+                        "type": "string",
+                        "enum": [
+                            "movies",
+                            "avs"
+                        ]
+                    },
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "description": "選擇語系.",
+                        "required": true,
+                        "type": "string",
+                        "enum": [
+                            "SCH",
+                            "ENG",
+                            "TCH"
+                        ]
+                    }
+                ],
+                "tags": [
+                    "search"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "正常回復情形: A json data of results",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "keywords": {
+                                    "type": "array",
+                                    "description": "a list of results.",
+                                    "items": {
+                                        "type": "string",
+                                        "description": "keyword"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/karaokes": {
+            "get": {
+                "summary": "取得(最新、熱門)的歌曲資料",
+                "description": "取歌曲資料",
+                "parameters": [
+                    {
+                        "name": "song_lang",
+                        "in": "query",
+                        "description": "歌曲語言, M:國語/E:英語/T:台語/C:粤語/J:日語",
+                        "required": false,
+                        "type": "string",
+                        "format": "string",
+                        "enum": [
+                            "M",
+                            "E",
+                            "T",
+                            "C",
+                            "J"
+                        ]
+                    },
+                    {
+                        "name": "list_type",
+                        "in": "query",
+                        "description": "歌曲類別, 1:新歌/2:點播排行/3:新歌排行",
+                        "required": false,
+                        "type": "string",
+                        "format": "string",
+                        "enum": [
+                            1,
+                            2,
+                            3
+                        ]
+                    },
+                    {
+                        "name": "since",
+                        "in": "query",
+                        "description": "要求從第幾筆開始抓",
+                        "required": false,
+                        "type": "number",
+                        "default": 0
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "一次抓多少筆",
+                        "required": false,
+                        "type": "number",
+                        "default": 20
+                    },
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "description": "目前無作用。",
+                        "required": true,
+                        "type": "string",
+                        "enum": [
+                            "SCH",
+                            "ENG",
+                            "TCH"
+                        ]
+                    }
+                ],
+                "tags": [
+                    "karaokes"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "正常回復情形: A json data of karaokes",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "update_time": {
+                                    "type": "string",
+                                    "description": "清單更新時間"
+                                },
+                                "karaokes": {
+                                    "type": "array",
+                                    "description": "a list of song data.",
+                                    "items": {
+                                        "$ref": "#/definitions/karaoke"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/karaokes/{karaokeid}": {
+            "get": {
+                "summary": "取得指karaokeid的歌曲細節",
+                "description": "取得指karaokeid的歌曲細節",
+                "parameters": [
+                    {
+                        "name": "karaokeid",
+                        "in": "path",
+                        "description": "提供要查詢的karaoke id",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "tags": [
+                    "karaokes"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "正常回復情形: A json data of karaokes",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "karaokes": {
+                                    "type": "array",
+                                    "description": "a list of song data.(取第0筆資料)",
+                                    "items": {
+                                        "$ref": "#/definitions/karaoke_detail"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/karaokes/count/{karaokeid}": {
+            "post": {
+                "summary": "增加karaoke的查看/下載/撥放次數",
+                "description": "增加使用者對指定karaoke的查看/下載/撥放次數",
+                "parameters": [
+                    {
+                        "name": "karaokeid",
+                        "in": "path",
+                        "description": "要增加次數的karaoke id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "行為類別",
+                        "required": true,
+                        "type": "string",
+                        "enum": [
+                            "play",
+                            "view",
+                            "download"
+                        ]
+                    }
+                ],
+                "tags": [
+                    "karaokes"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "正常回復情形: 統計數資料",
+                        "schema": {
+                            "$ref": "#/definitions/add_count"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/karaokes/count": {
+            "post": {
+                "summary": "增加一組karaoke的查看/下載/撥放次數",
+                "description": "增加使用者對指定一組karaoke的查看/下載/撥放次數",
+                "parameters": [
+                    {
+                        "name": "ids",
+                        "in": "query",
+                        "description": "要增加次數的karaoke id. e.g. ['4b8f8613e0c1c4f318s044a28593f9616']",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "行為類別",
+                        "required": true,
+                        "type": "string",
+                        "enum": [
+                            "play",
+                            "view",
+                            "download"
+                        ]
+                    }
+                ],
+                "tags": [
+                    "karaokes"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "正常回復情形: 統計數資料",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "each_karaokes_id": {
+                                    "$ref": "#/definitions/add_count"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/karaokes/covers": {
+            "get": {
+                "summary": "取得首頁封面圖",
+                "description": "取得首頁封面圖",
+                "parameters": [
+                    {
+                        "name": "song_langs",
+                        "in": "query",
+                        "description": "選取語系. 例如: [\"M\",\"E\",\"T\",\"C\",\"J\"]",
+                        "required": true,
+                        "type": "string",
+                        "format": "string"
+                    },
+                    {
+                        "name": "list_type",
+                        "in": "query",
+                        "description": "歌曲類別, 1:新歌/2:點播排行/3:新歌排行",
+                        "required": false,
+                        "type": "string",
+                        "format": "string",
+                        "enum": [
+                            1,
+                            2,
+                            3
+                        ]
+                    }
+                ],
+                "tags": [
+                    "karaokes"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "正常回復情形: A json data of covers",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "covers": {
+                                    "type": "array",
+                                    "description": "a list of cover data.",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "歌曲語系": {
+                                                "type": "string",
+                                                "description": "cover URL"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/karaokes/metadata": {
+            "get": {
+                "summary": "取得各個來源karaoke資料",
+                "description": "用karaoke ID來取得各個來源資料",
+                "parameters": [
+                    {
+                        "name": "ids",
+                        "in": "query",
+                        "description": "list of karaoke ID",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "tags": [
+                    "karaokes"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "正常回復情形: A json data of karaoke",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "karaokes": {
+                                    "type": "object",
+                                    "description": "Index by query karaoke IDs",
+                                    "properties": {
+                                        "Karaoke_ID": {
+                                            "type": "object",
+                                            "description": "Cloud data of each karaokes",
+                                            "properties": {
+                                                "metadata": {
+                                                    "type": "object",
+                                                    "description": "Index by metadata source name",
+                                                    "properties": {
+                                                        "語系": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "string",
+                                                                    "description": "Karaoke ID"
+                                                                },
+                                                                "source": {
+                                                                    "type": "string",
+                                                                    "description": "歌曲資料來源"
+                                                                },
+                                                                "title": {
+                                                                    "type": "string",
+                                                                    "description": "歌曲名稱"
+                                                                },
+                                                                "artist": {
+                                                                    "type": "array",
+                                                                    "description": "歌手",
+                                                                    "items": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "song_lang": {
+                                                                    "type": "string",
+                                                                    "description": "歌曲語系"
+                                                                },
+                                                                "posterurl": {
+                                                                    "type": "string",
+                                                                    "description": "歌曲影片截圖"
+                                                                },
+                                                                "description": {
+                                                                    "type": "string",
+                                                                    "description": "描述"
+                                                                },
+                                                                "play_url": {
+                                                                    "type": "string",
+                                                                    "description": "歌曲影片網址"
+                                                                },
+                                                                "md5sum": {
+                                                                    "type": "string",
+                                                                    "description": "資料checksum"
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/dbsync/last_timestamp/{entity}": {
+            "get": {
+                "summary": "取得某個資料表中最新一筆資料的timestamp",
+                "parameters": [
+                    {
+                        "name": "entity",
+                        "in": "path",
+                        "description": "資料表名稱。",
+                        "required": true,
+                        "type": "string",
+                        "enum": [
+                            "movies",
+                            "movie_content"
+                        ]
+                    }
+                ],
+                "tags": [
+                    "dbsync"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "資料表中最新一筆資料的timestamp",
+                        "schema": {
+                            "$ref": "#/definitions/timestamp"
+                        },
+                        "examples": {
+                            "timestamp": "2015-10-08 02:46:43.291Z"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/dbsync/task_status/{task}": {
+            "get": {
+                "summary": "取得某個task的狀態",
+                "description": "取得task thread的done變數判斷是否完成",
+                "parameters": [
+                    {
+                        "name": "task",
+                        "in": "path",
+                        "description": "task名稱；目前只有'rebuild_movie_keyword'、'patch_data'...等task。",
+                        "required": true,
+                        "type": "string",
+                        "enum": [
+                            "rebuild_movie_keyword",
+                            "patch_movies",
+                            "patch_movie_content"
+                        ]
+                    }
+                ],
+                "tags": [
+                    "dbsync"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "某個task的狀態",
+                        "schema": {
+                            "$ref": "#/definitions/task_done"
+                        },
+                        "examples": {
+                            "task_done": true
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/dbsync/patch_data": {
+            "post": {
+                "summary": "同步cloud上的資料表",
+                "description": "將資料表更新檔先匯入到temp_XXX資料表後，再進行insert或update；為避免逾時問題，利用thread執行背景更新",
+                "parameters": [
+                    {
+                        "name": "patchfile",
+                        "description": "要更新的資料表內容",
+                        "in": "formData",
+                        "required": true,
+                        "type": "file"
+                    },
+                    {
+                        "name": "tablename",
+                        "description": "更更新的資料表",
+                        "in": "formData",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "tags": [
+                    "dbsync"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "開始執行task的文字訊息",
+                        "schema": {
+                            "$ref": "#/definitions/message"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/dbsync/update_latest_movies": {
+            "put": {
+                "summary": "更新最新電影資料",
+                "description": "清空movie_latest資料表後，直接插入imdbid_list。",
+                "parameters": [
+                    {
+                        "name": "imdbid_list",
+                        "in": "formData",
+                        "type": "string",
+                        "description": "最新電影(imdbid, date)。A String of list of data(imdbid, date).",
+                        "required": true
+                    }
+                ],
+                "tags": [
+                    "dbsync"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "movie_latest資料表中的筆數",
+                        "schema": {
+                            "$ref": "#/definitions/rowcount"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/dbsync/rebuild_keyword": {
+            "put": {
+                "summary": "重建movie_keyword、drama_keyword⋯⋯等資料表中的keyword",
+                "description": "開一個新的thread執行sql，清空資料表並利用相關資料表(movies、drama⋯⋯)的資料重建keyword",
+                "parameters": [
+                    {
+                        "name": "tablename",
+                        "description": "更重建keyword的資料表(movies、drama）",
+                        "in": "formData",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "tags": [
+                    "dbsync"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "開始執行task的文字訊息",
+                        "schema": {
+                            "$ref": "#/definitions/message"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/avs": {
+            "get": {
+                "summary": "取得(最新、熱門)的AV資料",
+                "description": "取AV資料",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "輸入latest回傳最新資料, 輸入popular熱門排行",
+                        "required": false,
+                        "type": "string",
+                        "format": "string",
+                        "enum": [
+                            "latest",
+                            "popular"
+                        ]
+                    },
+                    {
+                        "name": "since",
+                        "in": "query",
+                        "description": "要求從第幾筆開始抓",
+                        "required": false,
+                        "type": "number",
+                        "default": 0
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "一次抓多少筆",
+                        "required": false,
+                        "type": "number",
+                        "default": 20
+                    },
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "description": "目前無作用。",
+                        "required": true,
+                        "type": "string",
+                        "enum": [
+                            "SCH",
+                            "ENG",
+                            "TCH"
+                        ]
+                    }
+                ],
+                "tags": [
+                    "avs"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "正常回復情形: A json data of AVs",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "avs": {
+                                    "type": "array",
+                                    "description": "a list of AV data.",
+                                    "items": {
+                                        "$ref": "#/definitions/av"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/avs/{avid}": {
+            "get": {
+                "summary": "取得指番號的AV細節",
+                "description": "取得指番號的AV細節",
+                "parameters": [
+                    {
+                        "name": "avid",
+                        "in": "path",
+                        "description": "提供要查詢的AV 番號",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "tags": [
+                    "avs"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "正常回復情形: A json data of AVs",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "avs": {
+                                    "type": "array",
+                                    "description": "a list of AV data.(取第0筆資料)",
+                                    "items": {
+                                        "$ref": "#/definitions/av_detail"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/avs/count/{avid}": {
+            "post": {
+                "summary": "增加AV的查看/下載/撥放次數",
+                "description": "增加使用者對指定AV的查看/下載/撥放次數",
+                "parameters": [
+                    {
+                        "name": "avid",
+                        "in": "path",
+                        "description": "要增加次數的AV id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "行為類別",
+                        "required": true,
+                        "type": "string",
+                        "enum": [
+                            "play",
+                            "view",
+                            "download"
+                        ]
+                    }
+                ],
+                "tags": [
+                    "avs"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "正常回復情形: 統計數資料",
+                        "schema": {
+                            "$ref": "#/definitions/add_count"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/avs/metadata": {
+            "get": {
+                "summary": "取得各個來源av資料",
+                "description": "用av ID來取得各個來源資料",
+                "parameters": [
+                    {
+                        "name": "ids",
+                        "in": "query",
+                        "description": "list of av ID",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "tags": [
+                    "avs"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "正常回復情形: A json data of av",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "avs": {
+                                    "type": "object",
+                                    "description": "Index by query av IDs",
+                                    "properties": {
+                                        "AV_ID": {
+                                            "type": "object",
+                                            "description": "Cloud data of each avs",
+                                            "properties": {
+                                                "metadata": {
+                                                    "type": "object",
+                                                    "description": "Index by metadata source name",
+                                                    "properties": {
+                                                        "來源": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "string",
+                                                                    "description": "AV ID"
+                                                                },
+                                                                "source": {
+                                                                    "type": "string",
+                                                                    "description": "資料來源"
+                                                                },
+                                                                "title": {
+                                                                    "type": "string",
+                                                                    "description": "影片名稱"
+                                                                },
+                                                                "stars": {
+                                                                    "type": "array",
+                                                                    "description": "演員",
+                                                                    "items": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "duration": {
+                                                                    "type": "integer",
+                                                                    "description": "影片長度"
+                                                                },
+                                                                "posterurl": {
+                                                                    "type": "string",
+                                                                    "description": "影片封面"
+                                                                },
+                                                                "genres": {
+                                                                    "type": "array",
+                                                                    "description": "分類",
+                                                                    "items": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "rating": {
+                                                                    "type": "integer",
+                                                                    "description": "評分"
+                                                                },
+                                                                "maker": {
+                                                                    "type": "string",
+                                                                    "description": "製造商"
+                                                                },
+                                                                "series": {
+                                                                    "type": "string",
+                                                                    "description": "系列名稱"
+                                                                },
+                                                                "date": {
+                                                                    "type": "string",
+                                                                    "description": "商品發售日期"
+                                                                },
+                                                                "description": {
+                                                                    "type": "string",
+                                                                    "description": "描述"
+                                                                },
+                                                                "samples": {
+                                                                    "type": "array",
+                                                                    "description": "影片截圖",
+                                                                    "items": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "description": {
+                                                                    "type": "string",
+                                                                    "description": "描述"
+                                                                },
+                                                                "url": {
+                                                                    "type": "string",
+                                                                    "description": "來源網址"
+                                                                },
+                                                                "date2": {
+                                                                    "type": "string",
+                                                                    "description": "配信開始日"
+                                                                },
+                                                                "code": {
+                                                                    "type": "string",
+                                                                    "description": "影片番號"
+                                                                },
+                                                                "md5sum": {
+                                                                    "type": "string",
+                                                                    "description": "資料checksum"
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/tvs": {
+            "get": {
+                "summary": "取得(最新、熱門)的電視劇資料",
+                "description": "取電視劇資料",
+                "parameters": [
+                    {
+                        "name": "drama_kind",
+                        "in": "query",
+                        "description": "0/動畫,1/台劇,2/韓劇,3/日劇,4/陸劇,5/港劇,6/美劇,7/其他,8/布袋戲",
+                        "required": false,
+                        "type": "string",
+                        "format": "string",
+                        "enum": [
+                            0,
+                            1,
+                            2,
+                            3,
+                            4,
+                            5,
+                            6,
+                            7,
+                            8
+                        ]
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "輸入latest回傳最新資料, 輸入popular熱門排行",
+                        "required": false,
+                        "type": "string",
+                        "format": "string",
+                        "enum": [
+                            "latest",
+                            "popular"
+                        ]
+                    },
+                    {
+                        "name": "since",
+                        "in": "query",
+                        "description": "要求從第幾筆開始抓",
+                        "required": false,
+                        "type": "number",
+                        "default": 0
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "一次抓多少筆",
+                        "required": false,
+                        "type": "number",
+                        "default": 20
+                    },
+                    {
+                        "name": "lang",
+                        "in": "query",
+                        "description": "目前無作用。",
+                        "required": true,
+                        "type": "string",
+                        "enum": [
+                            "SCH",
+                            "ENG",
+                            "TCH"
+                        ]
+                    }
+                ],
+                "tags": [
+                    "tvs"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "正常回復情形: A json data of tvs",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "tvs": {
+                                    "type": "array",
+                                    "description": "a list of tvs.",
+                                    "items": {
+                                        "$ref": "#/definitions/tv_detail"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/tvs/{tvid}": {
+            "get": {
+                "summary": "取得指tvid的電視劇資料",
+                "description": "取得指tvid的電視劇資料",
+                "parameters": [
+                    {
+                        "name": "tvid",
+                        "in": "path",
+                        "description": "提供要查詢的tv id",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "tags": [
+                    "tvs"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "正常回復情形: A json data of tvs",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "tvs": {
+                                    "type": "array",
+                                    "description": "a list of tv data.(取第0筆資料)",
+                                    "items": {
+                                        "$ref": "#/definitions/tv"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/tvs/count/{tvid}": {
+            "post": {
+                "summary": "增加tv的查看/下載/撥放次數",
+                "description": "增加使用者對指定tv的查看/下載/撥放次數",
+                "parameters": [
+                    {
+                        "name": "tvid",
+                        "in": "path",
+                        "description": "要增加次數的tv id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "行為類別",
+                        "required": true,
+                        "type": "string",
+                        "enum": [
+                            "play",
+                            "view",
+                            "download"
+                        ]
+                    }
+                ],
+                "tags": [
+                    "tvs"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "正常回復情形: 統計數資料",
+                        "schema": {
+                            "$ref": "#/definitions/add_count"
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/tvs/play_list/{tvid}": {
+            "get": {
+                "summary": "取得指tv id的電視劇播放列表",
+                "description": "取得指tv id的電視劇播放列表",
+                "parameters": [
+                    {
+                        "name": "tvid",
+                        "in": "path",
+                        "description": "提供要查詢的tv id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "source",
+                        "in": "query",
+                        "description": "影片播放來源",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "since",
+                        "in": "query",
+                        "description": "要求從第幾筆開始抓",
+                        "required": false,
+                        "type": "number",
+                        "default": 0
+                    },
+                    {
+                        "name": "limit",
+                        "in": "query",
+                        "description": "一次抓多少筆",
+                        "required": false,
+                        "type": "number",
+                        "default": 30
+                    }
+                ],
+                "tags": [
+                    "tvs"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "正常回復情形: A list of json data",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "play_list": {
+                                    "type": "array",
+                                    "description": "a json data of play info.",
+                                    "items": {
+                                        "$ref": "#/definitions/tv_viedo_item"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/tvs/metadata": {
+            "get": {
+                "summary": "取得各個來源tv資料",
+                "description": "用tv ID來取得各個來源資料",
+                "parameters": [
+                    {
+                        "name": "ids",
+                        "in": "query",
+                        "description": "list of TV ID",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "tags": [
+                    "tvs"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "正常回復情形: A json data of tvs",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "tvs": {
+                                    "type": "object",
+                                    "description": "Index by query tvs IDs",
+                                    "properties": {
+                                        "TV_ID": {
+                                            "type": "object",
+                                            "description": "Cloud data of each tvs",
+                                            "properties": {
+                                                "dbid": {
+                                                    "type": "string",
+                                                    "default": "null",
+                                                    "description": "DB ID"
+                                                },
+                                                "metadata": {
+                                                    "type": "object",
+                                                    "description": "Index by metadata source name",
+                                                    "properties": {
+                                                        "資料來源": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "string",
+                                                                    "description": "TV ID"
+                                                                },
+                                                                "source": {
+                                                                    "type": "string",
+                                                                    "description": "TV資料來源"
+                                                                },
+                                                                "title": {
+                                                                    "type": "string",
+                                                                    "description": "TV名稱"
+                                                                },
+                                                                "akas": {
+                                                                    "type": "array",
+                                                                    "description": "別名",
+                                                                    "items": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "kind": {
+                                                                    "type": "array",
+                                                                    "description": "TV分類",
+                                                                    "items": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "genres": {
+                                                                    "type": "array",
+                                                                    "description": "類別",
+                                                                    "items": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "posterurl": {
+                                                                    "type": "string",
+                                                                    "description": "TV海報"
+                                                                },
+                                                                "stars": {
+                                                                    "type": "array",
+                                                                    "description": "演員",
+                                                                    "items": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "year": {
+                                                                    "type": "integer",
+                                                                    "description": "上映年份"
+                                                                },
+                                                                "region": {
+                                                                    "type": "array",
+                                                                    "description": "上映地區",
+                                                                    "items": {
+                                                                        "type": "string"
+                                                                    }
+                                                                },
+                                                                "description": {
+                                                                    "type": "string",
+                                                                    "description": "描述"
+                                                                },
+                                                                "url": {
+                                                                    "type": "string",
+                                                                    "description": "資料來源網址"
+                                                                },
+                                                                "update_eps": {
+                                                                    "type": "integer",
+                                                                    "description": "最新集數"
+                                                                },
+                                                                "total_eps": {
+                                                                    "type": "integer",
+                                                                    "description": "總集數"
+                                                                },
+                                                                "completed": {
+                                                                    "type": "boolean",
+                                                                    "description": "是否完結"
+                                                                },
+                                                                "md5sum": {
+                                                                    "type": "string",
+                                                                    "description": "資料checksum"
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/files/addon/{version}": {
+            "get": {
+                "summary": "下載指定版本的 addon",
+                "description": "下載指定版本的 addon",
+                "parameters": [
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "description": "addon version",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "tags": [
+                    "files"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "正常回復情形: 回傳一個檔案"
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "summary": "上傳指定版本的 addon",
+                "description": "上傳指定版本的 addon. Server 最多可保留十個版本, 若出過十個, 則會自動刪除較舊的版本.",
+                "parameters": [
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "description": "addon version. e.g. 檔名為「CEC_1.0.20160213.addon」, 則取「1.0.20160213」作 version.",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "file",
+                        "in": "formData",
+                        "description": "欲上傳的 addon file",
+                        "required": true,
+                        "type": "file"
+                    }
+                ],
+                "tags": [
+                    "files"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "正常回復情形: addon information",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "version": {
+                                    "type": "string",
+                                    "description": "version string"
+                                },
+                                "md5sum": {
+                                    "type": "string",
+                                    "description": "md5sum string which generated by hashlib.md5 of python."
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "summary": "刪除指定版本的 addon",
+                "description": "刪除指定版本的 addon",
+                "parameters": [
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "description": "addon version.",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "tags": [
+                    "files"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "正常回復情形: addon information",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "version": {
+                                    "type": "string",
+                                    "description": "version string"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/files/addon_version": {
+            "get": {
+                "summary": "查詢最新 addon version",
+                "description": "查詢最新 addon version",
+                "tags": [
+                    "files"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "正常回復情形: version data",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "version": {
+                                    "type": "string",
+                                    "description": "version string"
+                                },
+                                "md5sum": {
+                                    "type": "string",
+                                    "description": "md5sum string"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        },
+        "/files/addon_version/{version}": {
+            "get": {
+                "summary": "查詢指定版本的 addon",
+                "description": "查詢指定版本的 addon",
+                "parameters": [
+                    {
+                        "name": "version",
+                        "in": "path",
+                        "description": "addon version.",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "tags": [
+                    "files"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "正常回復情形: version data",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "version": {
+                                    "type": "string",
+                                    "description": "version string"
+                                },
+                                "md5sum": {
+                                    "type": "string",
+                                    "description": "md5sum string"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "schema": {
+                            "$ref": "#/definitions/error"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "error": {
+            "type": "object",
+            "properties": {
+                "err_code": {
+                    "type": "integer",
+                    "format": "int32",
+                    "description": "錯誤代碼"
+                },
+                "err_msg": {
+                    "type": "string",
+                    "description": "錯誤資訊"
+                }
+            },
+            "example": {
+                "err_code": 500,
+                "err_msg": "Fatal error occurs, please contact Estvan immediately!"
+            }
+        },
+        "movie": {
+            "type": "object",
+            "properties": {
+                "title": {
+                    "type": "string",
+                    "description": "電影名稱"
+                },
+                "poster": {
+                    "type": "string",
+                    "default": "null",
+                    "description": "電影海報(小)"
+                },
+                "large_poster": {
+                    "type": "string",
+                    "default": "null",
+                    "description": "電影海報(大)"
+                },
+                "source_url": {
+                    "type": "string",
+                    "default": "null",
+                    "description": "資料來源"
+                },
+                "content": {
+                    "type": "array",
+                    "description": "在線電影資料",
+                    "items": {
+                        "$ref": "#/definitions/movie_content"
+                    }
+                },
+                "source": {
+                    "type": "string",
+                    "description": "電影資料來源",
+                    "enum": [
+                        "douban",
+                        "atmovies",
+                        "imdb"
+                    ]
+                },
+                "id": {
+                    "type": "string",
+                    "description": "資料庫裡的id, e.g. im_tt3163920, am_fLone0412104, db_4848086 (imdb, 開眼, 豆瓣)"
+                },
+                "imdbid": {
+                    "type": "string",
+                    "default": "null",
+                    "description": "IMDB ID"
+                },
+                "alias": {
+                    "type": "array",
+                    "description": "別名",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "rating": {
+                    "type": "string",
+                    "default": "null",
+                    "description": "IMDB 評分"
+                }
+            }
+        },
+        "movie_content": {
+            "properties": {
+                "index": {
+                    "type": "integer",
+                    "format": "int32",
+                    "description": "在線電影資訊頁面"
+                },
+                "play_link": {
+                    "type": "string",
+                    "description": "在線電影播放連結"
+                },
+                "source": {
+                    "type": "string",
+                    "description": "在線電影資料來源"
+                }
+            }
+        },
+        "movie_detail": {
+            "allOf": [
+                {
+                    "$ref": "#/definitions/movie"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "genres": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            },
+                            "description": "電影類型"
+                        },
+                        "description": {
+                            "type": "string",
+                            "description": "電影描述"
+                        },
+                        "countries": {
+                            "type": "array",
+                            "description": "電影上映國家",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "directors": {
+                            "type": "array",
+                            "description": "導演",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "writers": {
+                            "type": "array",
+                            "description": "編劇",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "stars": {
+                            "type": "array",
+                            "description": "演員",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "id": {
+                            "type": "string",
+                            "description": "資料庫裡的id, e.g. im_tt3163920, am_fLone0412104, db_4848086 (imdb, 開眼, 豆瓣)"
+                        },
+                        "imdbid": {
+                            "type": "string",
+                            "default": "null",
+                            "description": "IMDB ID"
+                        },
+                        "alias": {
+                            "type": "array",
+                            "description": "別名",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "rating": {
+                            "type": "string",
+                            "default": "null",
+                            "description": "IMDB 評分"
+                        }
+                    }
+                }
+            ]
+        },
+        "add_count": {
+            "properties": {
+                "count": {
+                    "type": "integer",
+                    "description": "指定種類增加後的次數"
+                },
+                "total": {
+                    "type": "integer",
+                    "description": "查看/下載/撥放次數的總和"
+                }
+            }
+        },
+        "search_index": {
+            "properties": {
+                "movies": {
+                    "type": "integer",
+                    "description": "電影類別搜尋到的結果總數"
+                },
+                "karaokes": {
+                    "type": "integer",
+                    "description": "KTV類別搜尋到的結果總數"
+                },
+                "avs": {
+                    "type": "integer",
+                    "description": "AV類別搜尋到的結果總數"
+                },
+                "tvs": {
+                    "type": "integer",
+                    "description": "TV類別搜尋到的結果總數"
+                }
+            }
+        },
+        "karaoke": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "歌曲ID"
+                },
+                "title": {
+                    "type": "string",
+                    "description": "歌曲名稱"
+                },
+                "artist": {
+                    "type": "string",
+                    "description": "演唱者"
+                },
+                "song_lang": {
+                    "type": "string",
+                    "description": "歌曲語系。M:國語/E:英語/T:台語/C:粤語/J:日語/K:/韓語/THA:泰語。"
+                },
+                "content": {
+                    "type": "array",
+                    "description": "在線歌曲資料",
+                    "items": {
+                        "$ref": "#/definitions/karaoke_content"
+                    }
+                }
+            }
+        },
+        "karaoke_content": {
+            "type": "object",
+            "properties": {
+                "source": {
+                    "type": "string",
+                    "description": "歌曲來源"
+                },
+                "play_link": {
+                    "type": "string",
+                    "description": "歌曲播放連結"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "檔案名稱"
+                },
+                "screenshot": {
+                    "type": "string",
+                    "description": "影片截圖"
+                },
+                "resolution": {
+                    "type": "array",
+                    "description": "影片解析度",
+                    "items": {
+                        "type": "string",
+                        "description": "解析度"
+                    }
+                }
+            }
+        },
+        "karaoke_detail": {
+            "allOf": [
+                {
+                    "$ref": "#/definitions/karaoke"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "content": {
+                            "type": "array",
+                            "description": "在線歌曲資料",
+                            "items": {
+                                "$ref": "#/definitions/karaoke_detail_content"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "karaoke_detail_content": {
+            "allOf": [
+                {
+                    "$ref": "#/definitions/karaoke_content"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "uploader": {
+                            "type": "string",
+                            "description": "上傳者帳號"
+                        },
+                        "description": {
+                            "type": "string",
+                            "description": "影片描述"
+                        },
+                        "duration": {
+                            "type": "string",
+                            "description": "影片長度(秒)"
+                        }
+                    }
+                }
+            ]
+        },
+        "av": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "番號"
+                },
+                "title": {
+                    "type": "string",
+                    "description": "AV名稱"
+                },
+                "posterurl": {
+                    "type": "string",
+                    "description": "封面"
+                },
+                "performer": {
+                    "type": "string",
+                    "description": "演出者"
+                },
+                "source_url": {
+                    "type": "string",
+                    "description": "資料來源頁面"
+                }
+            }
+        },
+        "av_detail": {
+            "allOf": [
+                {
+                    "$ref": "#/definitions/av"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "duration": {
+                            "type": "string",
+                            "description": "影片時間長度"
+                        },
+                        "categories": {
+                            "type": "array",
+                            "description": "類別",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "rating": {
+                            "type": "string",
+                            "description": "評分"
+                        },
+                        "maker": {
+                            "type": "string",
+                            "description": "廠商"
+                        },
+                        "series": {
+                            "type": "string",
+                            "description": "系列"
+                        },
+                        "description": {
+                            "type": "string",
+                            "description": "簡介"
+                        },
+                        "date": {
+                            "type": "string",
+                            "description": "發片日期"
+                        },
+                        "samples": {
+                            "type": "array",
+                            "description": "截圖",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "timestamp": {
+            "type": "object",
+            "properties": {
+                "timestamp": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "資料表中最新一筆資料的timestamp"
+                }
+            }
+        },
+        "task_done": {
+            "type": "object",
+            "properties": {
+                "timestamp": {
+                    "type": "string",
+                    "description": "task狀態，True是完成，False則未完成"
+                }
+            }
+        },
+        "message": {
+            "type": "string",
+            "description": "回傳的訊息"
+        },
+        "rowcount": {
+            "type": "integer",
+            "description": "資料筆數"
+        },
+        "tv": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "ID"
+                },
+                "title": {
+                    "type": "string",
+                    "description": "電視劇名稱"
+                },
+                "year": {
+                    "type": "string",
+                    "description": "電視劇年份"
+                },
+                "alias": {
+                    "type": "array",
+                    "description": "別名",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "file_source": {
+                    "type": "array",
+                    "description": "影片來源",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "kind": {
+                    "type": "string",
+                    "description": "電視劇類別"
+                },
+                "description": {
+                    "type": "string",
+                    "description": "簡介"
+                },
+                "poster": {
+                    "type": "string",
+                    "description": "封面"
+                },
+                "region": {
+                    "type": "string",
+                    "description": "放印地區"
+                },
+                "genres": {
+                    "type": "array",
+                    "description": "類別",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "source_url": {
+                    "type": "string",
+                    "description": "電視劇來源資料頁面"
+                },
+                "stars": {
+                    "type": "array",
+                    "description": "演員",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "source": {
+                    "type": "string",
+                    "description": "電視劇資料來源"
+                },
+                "rdate": {
+                    "type": "string",
+                    "description": "最後更新日期"
+                },
+                "total_eps": {
+                    "type": "integer",
+                    "description": "總集數"
+                },
+                "update_eps": {
+                    "type": "integer",
+                    "description": "最後更新集數"
+                },
+                "completed": {
+                    "type": "boolean",
+                    "description": "是否完結"
+                }
+            }
+        },
+        "tv_detail": {
+            "allOf": [
+                {
+                    "$ref": "#/definitions/tv"
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "play_content": {
+                            "type": "object",
+                            "description": "預設播放資料",
+                            "properties": {
+                                "play_url": {
+                                    "type": "string",
+                                    "description": "影片播放連結"
+                                },
+                                "video_urls": {
+                                    "type": "string",
+                                    "description": "影片檔案連結"
+                                },
+                                "title": {
+                                    "type": "string",
+                                    "description": "影片標題"
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "tv_viedo_item": {
+            "type": "object",
+            "properties": {
+                "play_url": {
+                    "type": "string",
+                    "description": "URL to play"
+                },
+                "video_urls": {
+                    "type": "array",
+                    "description": "File URLs to download",
+                    "items": {
+                        "type": "string",
+                        "description": "File URL"
+                    }
+                },
+                "title": {
+                    "type": "string",
+                    "description": "集數名稱"
+                }
+            }
+        }
+    }
+}
